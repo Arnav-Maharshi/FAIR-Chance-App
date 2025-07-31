@@ -1,17 +1,25 @@
 {
   "name": "fair-chance-app",
   "version": "1.0.0",
+  "description": "FAIR Chance© (Fine-motor Artificial Intelligence-assisted Rehabilitation Chance)",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "echo 'No build process needed for static files'",
+    "dev": "npx http-server www -p 8100",
+    "android": "npx cap run android",
+    "ios": "npx cap run ios",
+    "sync": "npx cap sync",
+    "copy": "npx cap copy"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["rehabilitation", "hand-tracking", "medical"],
+  "author": "Arnav Maharshi",
+  "devDependencies": {
+    "@capacitor/cli": "latest"
+  },
   "dependencies": {
-    "@capacitor/android": "^7.4.2",
-    "@capacitor/core": "^7.4.2",
-    "@capacitor/ios": "^7.4.2"
+    "@capacitor/android": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/ios": "latest",
+    "@capacitor/camera": "latest"
   }
 }

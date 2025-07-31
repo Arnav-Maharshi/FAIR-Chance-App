@@ -1,5 +1,28 @@
 {
   "appId": "com.fairchance.app",
   "appName": "FAIR Chance",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Camera": {
+      "permissions": ["camera"]
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  },
+  "android": {
+    "permissions": [
+      "android.permission.CAMERA",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.MODIFY_AUDIO_SETTINGS"
+    ]
+  },
+  "ios": {
+    "permissions": [
+      "NSCameraUsageDescription: This app needs camera access for hand tracking rehabilitation exercises."
+    ]
+  }
 }
