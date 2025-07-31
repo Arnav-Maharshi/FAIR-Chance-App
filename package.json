@@ -11,15 +11,19 @@
     "sync": "npx cap sync",
     "copy": "npx cap copy"
   },
-  "keywords": ["rehabilitation", "hand-tracking", "medical"],
+  "keywords": [
+    "rehabilitation",
+    "hand-tracking",
+    "medical"
+  ],
   "author": "Arnav Maharshi",
   "devDependencies": {
     "@capacitor/cli": "latest"
   },
   "dependencies": {
     "@capacitor/android": "latest",
+    "@capacitor/camera": "^7.0.1",
     "@capacitor/core": "latest",
-    "@capacitor/ios": "latest",
-    "@capacitor/camera": "latest"
+    "@capacitor/ios": "latest"
   }
 }
