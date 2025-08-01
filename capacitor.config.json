@@ -1,9 +1,13 @@
 {
   "appId": "com.fairchance.app",
   "appName": "FAIR Chance",
-  "webDir": "www",
+  "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": [
+      "https://cdn.jsdelivr.net",
+      "https://storage.googleapis.com"
+    ]
   },
   "plugins": {
     "Camera": {

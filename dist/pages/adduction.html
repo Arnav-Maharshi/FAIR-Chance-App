@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAIR Chance© - Adduction</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
+  <script type="module" crossorigin src="../assets/adduction-C0y4thoy.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="../assets/utils-BIuvQIPN.js">
+  <link rel="stylesheet" crossorigin href="../assets/style-DKpqm1-Y.css">
+</head>
+
+<body>
+  <h1>Adduction</h1>
+  <h3 style="margin-bottom: 0vh;">ALLOW CAMERA ACCESS</h3>
+  <h4>(Reload this website if camera is NOT starting)</h4>
+
+  <p id="instruction">
+    Bring your fingers close together while keeping them straight
+  </p>
+  <div id="container">
+    <video id="input_video" autoplay playsinline style="display:none;"></video>
+    <!-- <canvas id="output_canvas" width="640" height="480"></canvas>-->
+    <canvas id="output_canvas"></canvas>
+  </div>
+  <div id="feedback"></div>
+
+  <fieldset>
+    <legend>Select Finger(s) to Measure:</legend>
+    <div id="radio_buttons">
+      <label>
+        <input id="rdIMRL" type="radio" name="modeGrp" value="modeIMRL" checked>
+        Index, Middle, Ring & Little Finger
+      </label>
+
+      <label for="rdThumb">
+        <input id="rdThumb" type="radio" name="modeGrp" value="modethumb">
+        Thumb
+      </label>
+    </div>
+  </fieldset>
+
+  <button id="backButton" onclick="location.href='../index.html'">Back to Home</button>
+</body>
+
+</html>
