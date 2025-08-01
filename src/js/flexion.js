@@ -15,6 +15,11 @@ const canvasCtx = canvasElement.getContext('2d');
 const feedbackDiv = document.getElementById('feedback');
 const videoContainer = document.getElementById('container');
 const modeRadioBtns = Array.from(document.querySelectorAll('input[name="modeGrp"]')); // Select the radio button group
+const loadingSpinner = document.getElementById('loadingSpinner');
+
+videoElement.addEventListener('waiting', () => {
+    loadingSpinner.classList.remove('hidden'); // Show spinner when waiting for data
+});
 
 let selectedMode = modeRadioBtns.find(r => r.checked).value; // Default mode is Index-Finger & Thumb
 let handLandmarker;
@@ -165,6 +170,10 @@ async function setupCamera() {
       };
     });
 
+    setTimeout(() => {
+      loadingSpinner.classList.add('hidden'); // Hide loading spinner after camera video is ready
+      console.log("Camera video is ready");
+    }, 1000); // adding short delay to allow cushion time for video to load
 
     // !!CRUCIAL!!
     // Set canvas size to match video dimensions for proper aspect ratio
