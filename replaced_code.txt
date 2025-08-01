@@ -1,0 +1,3 @@
+in packages.json, scripts section- original->
+    "build": "echo 'No build process needed for static files'",
+    "dev": "npx http-server www -p 8100",
