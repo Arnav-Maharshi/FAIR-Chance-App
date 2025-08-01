@@ -56,12 +56,15 @@ async function setupHandLandmarker() {
     'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
   );
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: MODEL_ASSET_PATH },
+    baseOptions: { modelAssetPath: MODEL_ASSET_PATH, 
+                   delegate: 'GPU', // Use GPU for native platforms, NONE for web
+                  },
     runningMode: 'VIDEO',
     numHands: 1,
     minHandDetectionConfidence: 0.7,
     minHandPresenceConfidence: 0.7,
-    minTrackingConfidence: 0.7
+    minTrackingConfidence: 0.7,
+    delegateToNative: isNative, // (true for mobile) using native-optimized backends, which are faster and more efficient—especially on devices that support WebAssembly or WebGPU.
   });
 }
 
@@ -84,10 +87,10 @@ async function setupCamera() {
         aspectRatio: { ideal: 3/4 }*/
         width: {ideal:640,min:320},
         height: {ideal:480,min:240},
-        aspectRatio: { exact: 4 / 3 }
+        aspectRatio: { ideal: 4 / 3 }
       };
     } else {
-      // Landscape
+      // Mobile Landscape
       videoContainer.style.aspectRatio = '16/9';
       canvasElement.style.aspectRatio = '16/9';
       videoElement.style.aspectRatio = '16/9';
@@ -95,9 +98,9 @@ async function setupCamera() {
         facingMode: "user",
         width: { ideal: 1920, min: 1280 },
         height: { ideal: 1080, min: 720 },
-        aspectRatio: { exact: 16/9 }
+        aspectRatio: { ideal: 16/9 }
       };
-      videoContainer.style.maxHeight = `${window.innerHeight * 0.8}px`;
+      
     }
   } else {
 
@@ -136,7 +139,7 @@ async function setupCamera() {
       // Leave this commented- This is the best code for landscape video
       //videoContainer.style.maxWidth = `${window.innerWidth -100}px`; // Set max width for landscape
       // Works for iphone- 
-      videoContainer.style.maxHeight = `${window.innerHeight}px`; // Set max height for landscape
+      //videoContainer.style.maxHeight = `${window.innerHeight}px`; // Set max height for landscape
     }
   }
   
@@ -252,7 +255,7 @@ async function renderLoop() {
 
 
       myUtils.drawProgressBar(canvasCtx, acc_score);
-      // Feedback based on PIP angle
+      // Feedback based on PIP angle (kept delayed to allow for smoother UI)
       setTimeout(() => {
         const feedback = myUtils.getCompensationFeedbackFlexion(angles[1].value); 
         feedbackDiv.textContent = feedback.text; // Displaying the feedback text
@@ -298,6 +301,9 @@ async function main() {
 
   //Checking if the window is resized OR orientation changes (potrait/landscape)
   window.addEventListener('resize', setupCamera);
+  window.addEventListener("resize", () => {
+    location.reload(); // Reload the page
+  });
   window.addEventListener('orientationchange', handleOrientationChange);
 
   // Mobile-specific event listeners
