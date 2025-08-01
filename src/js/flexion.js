@@ -159,10 +159,12 @@ async function setupCamera() {
     console.log("Width: ", video_constraints.width, "Height: ", video_constraints.height);
     console.log("Vid Width: ", videoElement.videoWidth, "Vid Height: ", videoElement.videoHeight);
     await new Promise((resolve) => {
-      videoElement.onloadedmetadata = () => resolve();    
+      videoElement.onloadedmetadata = () => {
+        videoElement.play(); // Play the video stream
+        resolve();
+      };
     });
 
-    await videoElement.play(); // Play the video stream
 
     // !!CRUCIAL!!
     // Set canvas size to match video dimensions for proper aspect ratio
@@ -295,16 +297,41 @@ function handleOrientationChange() {
   }, 500); // Delay to allow orientation change to complete
 }
 
-async function main() {
-  await setupHandLandmarker();
+async function resetApp() {
+  // Stop camera stream
+  if (videoElement.srcObject) {
+    const tracks = videoElement.srcObject.getTracks();
+    tracks.forEach((track) => track.stop());
+  }
+
+  // Clear canvas
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+  // Reset dimensions
+  videoElement.width = 0;
+  videoElement.height = 0;
+  canvasElement.width = 0;
+  canvasElement.height = 0;
+
+  // Re-initialize everything
   await setupCamera();
+  //videoElement.play();
+  //renderLoop(); // or whatever your tracking loop is called
+}
+
+async function main() {  
+  const [_, __] = await Promise.all([
+    setupCamera(),            // starts camera stream
+    setupHandLandmarker(),    // loads the ML model
+  ]);
 
   //Checking if the window is resized OR orientation changes (potrait/landscape)
-  window.addEventListener('resize', setupCamera);
-  window.addEventListener("resize", () => {
+  //window.addEventListener('resize', setupCamera);
+  window.addEventListener('orientationchange', () => {
+    //resetApp();
     location.reload(); // Reload the page
   });
-  window.addEventListener('orientationchange', handleOrientationChange);
+  //window.addEventListener('orientationchange', handleOrientationChange);
 
   // Mobile-specific event listeners
   if (isNative) {
@@ -317,6 +344,10 @@ async function main() {
   renderLoop();
 }
 
-main(); 
+window.addEventListener("load", () => {
+  console.log("Window loaded, initializing...");
+  main();
+});
+//main();
 
 window.Capacitor = window.Capacitor || {};
