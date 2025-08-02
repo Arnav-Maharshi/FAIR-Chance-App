@@ -41,8 +41,7 @@ for (const rd of modeRadioBtns) {
   });
 }
 
-const MODEL_ASSET_PATH =
-  'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
+const MODEL_ASSET_PATH = '../pages/models/hand_landmarker.task'; // Path to the hand landmark model
 
 
 // Default settings for camera (being adjusted in setupCamera() )
@@ -58,7 +57,7 @@ const timestampHistory = []; // Refresh interval in milliseconds
 
 async function setupHandLandmarker() {
   const vision = await FilesetResolver.forVisionTasks(
-    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+    '../pages/models/wasm', // Path to the WASM files
   );
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
     baseOptions: { modelAssetPath: MODEL_ASSET_PATH, 

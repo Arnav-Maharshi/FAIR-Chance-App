@@ -12,6 +12,10 @@ export default defineConfig({
 // This configuration sets up Vite to build the project with multiple entry points.
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { normalizePath } from 'vite'
+import path from 'node:path'
+
 
 export default defineConfig({
   base: './', // Set the base path for the project
@@ -32,5 +36,21 @@ export default defineConfig({
       }
     }
   },
-  
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: normalizePath(path.resolve(__dirname, 'src/pages/models/hand_landmarker.task')),
+          dest: 'pages/models' // goes into dist/models/
+        },
+        {
+          src: normalizePath(path.resolve(__dirname, 'src/pages/models/wasm/*')),
+          dest: 'pages/models/wasm'
+        }
+      ],
+      watch: {
+        reloadPageOnChange: true // reload the page when the files above are changed (provides a hot/live-reloading-like experience for static files)
+      }
+    })
+  ],
 });
