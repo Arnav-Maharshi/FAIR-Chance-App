@@ -1,4 +1,13 @@
 //import * as myUtils from "./Modularized_Functions/utils.js";
+/*import '../libs/chart.umd.js'; // Import Chart.js library
+import '../libs/hammer.min.js'; // Import Hammer.js for touch gestures
+import '../libs/chartjs-plugin-zoom.min.js'; // Import Chart.js zoom plugin
+*/
+import Chart from 'chart.js/auto';
+import 'hammerjs'; // Import Hammer.js for touch gestures
+import zoomPlugin from 'chartjs-plugin-zoom';
+
+Chart.register(zoomPlugin);
 
 const chartCanvas = document.getElementById("myChart");
 const chartCtx = chartCanvas.getContext("2d");
