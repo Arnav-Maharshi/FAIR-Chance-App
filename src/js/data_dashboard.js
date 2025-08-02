@@ -11,9 +11,27 @@ Chart.register(zoomPlugin);
 
 const chartCanvas = document.getElementById("myChart");
 const chartCtx = chartCanvas.getContext("2d");
+const parentContainer = document.getElementById("chartContainer");
+const containerWidth = parentContainer.offsetWidth;
+const containerHeight = parentContainer.offsetHeight;
 let myChart; // Declare myChart variable to hold the chart instance
 
+//chartCanvas.width = parentContainer.offsetWidth;
+//chartCanvas.height = parentContainer.offsetHeight;
+
+/*if (window.matchMedia("(orientation: portrait)").matches) {
+    // In portrait, the container's width is the desired *height* of the chart,
+    // and the container's height is the desired *width*.
+    chartCanvas.width = containerHeight;
+    chartCanvas.height = containerWidth;
+} else {
+    // In landscape, or default, follow the container directly
+    chartCanvas.width = containerWidth;
+    chartCanvas.height = containerHeight;
+}*/
+
 renderChart(); // Call the function to render the chart
+
 
 async function renderChart() {
     const datapoints = await getData(); // Call the function to fetch and log data
@@ -93,8 +111,9 @@ async function renderChart() {
     ]
     },
     options: {
-        //responsive: true,
-        //maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false, // When false- Allow the chart to resize with the container (otherwise it will shrunk)
+        
         scales: {
             x: { 
                 beginAtZero: true,
