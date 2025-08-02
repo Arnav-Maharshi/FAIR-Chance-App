@@ -1,4 +1,6 @@
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+/*Getting Mediapipe from external website, not applicable for offline use
+import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs"; */
 import * as myUtils from "./Modularized_Functions/utils.js";
 import { Capacitor } from '@capacitor/core';  // NEW: Capacitor platform detection
 import { Camera } from '@capacitor/camera';
@@ -41,7 +43,8 @@ for (const rd of modeRadioBtns) {
   });
 }
 
-const MODEL_ASSET_PATH = '../pages/models/hand_landmarker.task'; // Path to the hand landmark model
+const MODEL_ASSET_PATH = '../pages/models/hand_landmarker.task'; // Path to the hand landmark model (downloaded from below link and bundled with the app)
+// Link to the model published online: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
 
 
 // Default settings for camera (being adjusted in setupCamera() )
@@ -57,8 +60,10 @@ const timestampHistory = []; // Refresh interval in milliseconds
 
 async function setupHandLandmarker() {
   const vision = await FilesetResolver.forVisionTasks(
-    '../pages/models/wasm', // Path to the WASM files
+    '../pages/models/wasm', // Path to the WASM, helper files (downloaded from below link and bundled with the app)
   );
+  // Link to the official WASM, helper files: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
     baseOptions: { modelAssetPath: MODEL_ASSET_PATH, 
                    delegate: 'GPU', // Use GPU for native platforms, NONE for web
@@ -80,7 +85,7 @@ async function setupCamera() {
   if (isMobile) {
     // Mobile-optimized constraints
     if (window.innerHeight > window.innerWidth) {
-      // Portrait
+      // Mobile Portrait
       videoContainer.style.aspectRatio = '4/3'; // Adjust as needed
       canvasElement.style.aspectRatio = '4/3';
       videoElement.style.aspectRatio = '4/3';
@@ -110,7 +115,7 @@ async function setupCamera() {
 
     // !! DESKTOP-SPECIFIC ADJUSTMENTS !!
     if (window.innerHeight > window.innerWidth) {
-      // Portrait orientation
+      // Desktop Portrait orientation
       videoContainer.style.aspectRatio = '4/3'; // Adjust as needed
       canvasElement.style.aspectRatio = '4/3';
       videoElement.style.aspectRatio = '4/3';
@@ -125,7 +130,7 @@ async function setupCamera() {
       console.log(`Display updated: Container Aspect Ratio set to actual video: ${videoContainer.style.aspectRatio}`);
       
     } else {
-      // Landscape orientation
+      // Desktop Landscape orientation
       videoContainer.style.aspectRatio = '16/9'; // Adjust as needed
       canvasElement.style.aspectRatio = '16/9';
       videoElement.style.aspectRatio = '16/9';
@@ -265,12 +270,14 @@ async function renderLoop() {
 
 
       myUtils.drawProgressBar(canvasCtx, acc_score);
+      
       // Feedback based on PIP angle (kept delayed to allow for smoother UI)
       setTimeout(() => {
         const feedback = myUtils.getCompensationFeedbackFlexion(angles[1].value); 
         feedbackDiv.textContent = feedback.text; // Displaying the feedback text
         feedbackDiv.style.color = feedback.color; // Displaying the feedback color
       }, 1000);
+
       // Show angle values
       canvasCtx.fillStyle = '#fff';
       canvasCtx.fontSize = Math.max(24, canvasElement.height* 0.05);   // Calculate font size relative to bar height or canvas height
@@ -305,6 +312,7 @@ function handleOrientationChange() {
   }, 500); // Delay to allow orientation change to complete
 }
 
+// Reset the app to initial state (trying to optimize responsiveness, avoiding reload)
 async function resetApp() {
   // Stop camera stream
   if (videoElement.srcObject) {
