@@ -1,5 +1,12 @@
-import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs";
+import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import * as myUtils from "./Modularized_Functions/utils.js";
+import { Capacitor } from '@capacitor/core';  // NEW: Capacitor platform detection
+import { Camera } from '@capacitor/camera';
+
+async function requestCameraPermission() {
+  const status = await Camera.requestPermissions();
+  return status.camera === 'granted';
+}
 
 const videoElement = document.getElementById('input_video');
 const canvasElement = document.getElementById('output_canvas');
@@ -7,8 +14,24 @@ const canvasCtx = canvasElement.getContext('2d');
 const feedbackDiv = document.getElementById('feedback');
 const videoContainer = document.getElementById('container');
 const modeRadioBtns = Array.from(document.querySelectorAll('input[name="modeGrp"]')); // Select the radio button group
+const loadingSpinner = document.getElementById('loadingSpinner');
+
+videoElement.addEventListener('waiting', () => {
+    loadingSpinner.classList.remove('hidden'); // Show spinner when waiting for data
+});
+
 
 let selectedMode = modeRadioBtns.find(r => r.checked).value; // Default mode is Index-Finger & Thumb
+let handLandmarker;
+let running = false;
+let prevLandmarks = null;
+const alpha = 0.5; // Smoothing factor (Lower value -> More Smoothing -> Less fluctuations in accuracy score )
+
+// Check if running on a native platform (iOS/Android) or web
+// This is useful for adjusting camera settings or UI elements
+const isNative = Capacitor.isNativePlatform();  // Detects if running on mobile
+const platform = Capacitor.getPlatform(); 
+
 // Event listener for mode changes
 for (const rd of modeRadioBtns) {
   rd.addEventListener('change', function() {
@@ -17,13 +40,7 @@ for (const rd of modeRadioBtns) {
   });
 }
 
-const MODEL_ASSET_PATH =
-  'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task';
-
-let handLandmarker;
-let running = false;
-let prevLandmarks = null;
-const alpha = 0.5; // Smoothing factor (Lower value -> More Smoothing -> Less fluctuations in accuracy score )
+const MODEL_ASSET_PATH = '../pages/models/hand_landmarker.task'; // Path to the hand landmark model
 
 // Default settings for camera (being adjusted in setupCamera() )
 let video_constraints = { 
@@ -32,60 +49,110 @@ let video_constraints = {
       height: {ideal: 480}, 
     };
 
+const angleHistory = []; // Array to store angles history
+const accScoreHistory = []; // Array to store accuracy score history
+const timestampHistory = []; // Refresh interval in milliseconds
+
 
 async function setupHandLandmarker() {
   const vision = await FilesetResolver.forVisionTasks(
-    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+    '../pages/models/wasm', // Path to the WASM, helper files
   );
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: MODEL_ASSET_PATH },
+    baseOptions: { modelAssetPath: MODEL_ASSET_PATH,
+                   delegate: 'GPU', // Use GPU for native platforms, NONE for web
+                  },
     runningMode: 'VIDEO',
     numHands: 1,
     minHandDetectionConfidence: 0.7,
     minHandPresenceConfidence: 0.7,
-    minTrackingConfidence: 0.7
+    minTrackingConfidence: 0.7,
+    delegateToNative: isNative, // (true for mobile) using native-optimized backends, which are faster and more efficient—especially on devices that support WebAssembly or WebGPU
   });
 }
 
 
 async function setupCamera() {
-  /*Changing aspect ratio and appropriate resolution 
-  based on window size/orientation (potrait/landscape) */
-  if (window.innerHeight > window.innerWidth) {
-    // Portrait orientation
-    videoContainer.style.aspectRatio = '4/3'; // Adjust as needed
-    canvasElement.style.aspectRatio = '4/3';
-    videoElement.style.aspectRatio = '4/3';
-    video_constraints = {
-      facingMode: "user",
-      width: {ideal:640,min:320},
-      height: {ideal:480,min:240},
-      aspectRatio: { exact: 4 / 3 }
-    };
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || isNative;
 
-    console.log("Potrait orientation");
-    console.log(`Display updated: Container Aspect Ratio set to actual video: ${videoContainer.style.aspectRatio}`);
-    
+  // !! MOBILE SPECIFIC ADJUSTMENTS !!
+  if (isMobile) {
+    // Mobile-optimized constraints
+    if (window.innerHeight > window.innerWidth) {
+      // Mobile Portrait
+      videoContainer.style.aspectRatio = '4/3'; // Adjust as needed
+      canvasElement.style.aspectRatio = '4/3';
+      videoElement.style.aspectRatio = '4/3';
+      video_constraints = {
+        facingMode: "user",
+        /*width: { ideal: 480, min: 240 },
+        height: { ideal: 640, min: 320 },
+        aspectRatio: { ideal: 3/4 }*/
+        width: {ideal:640,min:320},
+        height: {ideal:480,min:240},
+        aspectRatio: { ideal: 4 / 3 }
+      };
+    } else {
+      // Mobile Landscape
+      videoContainer.style.aspectRatio = '16/9';
+      canvasElement.style.aspectRatio = '16/9';
+      videoElement.style.aspectRatio = '16/9';
+      video_constraints = {
+        facingMode: "user",
+        width: { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 },
+        aspectRatio: { ideal: 16/9 }
+      };
+      
+    }
   } else {
-    // Landscape orientation
-    videoContainer.style.aspectRatio = '16/9'; // Adjust as needed
-    canvasElement.style.aspectRatio = '16/9';
-    videoElement.style.aspectRatio = '16/9';
-    video_constraints = {
-      facingMode: "user",
-      width: {ideal: 1920, min: 1280},
-      height: {ideal: 1080, min: 720},
-      aspectRatio: { exact: 16 / 9 }
-    };
-    
-    console.log("Landscape orientation");
-    console.log(`Display updated: Container Aspect Ratio set to actual video: ${videoContainer.style.aspectRatio}`);
-    
-    
-    // Leave this commented- This is the best code for landscape video
-    //videoContainer.style.maxWidth = `${window.innerWidth -100}px`; // Set max width for landscape
-    // Works for iphone- 
-    videoContainer.style.maxHeight = `${window.innerHeight}px`; // Set max height for landscape
+
+    // !! DESKTOP-SPECIFIC ADJUSTMENTS !!
+    if (window.innerHeight > window.innerWidth) {
+      // Desktop Portrait orientation
+      videoContainer.style.aspectRatio = '4/3'; // Adjust as needed
+      canvasElement.style.aspectRatio = '4/3';
+      videoElement.style.aspectRatio = '4/3';
+      video_constraints = {
+        facingMode: "user",
+        width: {ideal:640,min:320},
+        height: {ideal:480,min:240},
+        aspectRatio: { exact: 4 / 3 }
+      };
+
+      console.log("Potrait orientation");
+      console.log(`Display updated: Container Aspect Ratio set to actual video: ${videoContainer.style.aspectRatio}`);
+      
+    } else {
+      // Desktop Landscape orientation
+      videoContainer.style.aspectRatio = '16/9'; // Adjust as needed
+      canvasElement.style.aspectRatio = '16/9';
+      videoElement.style.aspectRatio = '16/9';
+      video_constraints = {
+        facingMode: "user",
+        width: {ideal: 1920, min: 1280},
+        height: {ideal: 1080, min: 720},
+        aspectRatio: { exact: 16 / 9 }
+      };
+      
+      console.log("Landscape orientation");
+      console.log(`Display updated: Container Aspect Ratio set to actual video: ${videoContainer.style.aspectRatio}`);
+      
+      
+      // Leave this commented- This is the best code for landscape video
+      //videoContainer.style.maxWidth = `${window.innerWidth -100}px`; // Set max width for landscape
+      // Works for iphone- 
+      //videoContainer.style.maxHeight = `${window.innerHeight}px`; // Set max height for landscape
+    }
+  }
+  
+  if (Capacitor.isNativePlatform()) {
+    const granted = await requestCameraPermission();
+    if (!granted) {
+      feedbackDiv.textContent = 'Camera permission is required.';
+      feedbackDiv.style.color = 'red';
+      return;
+    }
   }
 
   try{
@@ -94,19 +161,33 @@ async function setupCamera() {
     videoElement.srcObject = stream;
     console.log("Width: ", video_constraints.width, "Height: ", video_constraints.height);
     console.log("Vid Width: ", videoElement.videoWidth, "Vid Height: ", videoElement.videoHeight);
-      
+    await new Promise((resolve) => {
+      videoElement.onloadedmetadata = () => {
+        videoElement.play(); // Play the video stream
+        resolve();
+      };
+    });
+
+    setTimeout(() => {
+      loadingSpinner.classList.add('hidden'); // Hide loading spinner after camera video is ready
+      console.log("Camera video is ready");
+    }, 1000); // adding short delay to allow cushion time for video to load
+
     // !!CRUCIAL!!
     // Set canvas size to match video dimensions for proper aspect ratio
     canvasElement.width = videoElement.videoWidth;
     canvasElement.height = videoElement.videoHeight;
-
-    return new Promise((resolve) => {
-      videoElement.onloadedmetadata = () => resolve();    
-    });
   }
   catch (error) {
     console.error("Error accessing camera:", error);
-    feedbackDiv.textContent = 'Could not access camera. Please allow camera permissions.';
+    
+    // Mobile-specific error handling
+    if (isNative) {
+      feedbackDiv.textContent = 'Camera permission required. Please grant camera access in settings.';
+    } else {
+      feedbackDiv.textContent = 'Could not access camera. Please allow camera permissions.';
+    }
+    
     feedbackDiv.style.color = '#ff4444';
     return Promise.reject(error);
   }
@@ -151,6 +232,7 @@ async function renderLoop() {
       /// !!!!!!*****
       const distances = myUtils.oppositionDistance(lmrks); // Calculating the distances
       const wantedDistance = distances.find(d => d.name === selectedMode); // Finding the distance for the selected mode
+      
       // Accuracy score is based on the first joint (MP)
       const acc_score = Math.max(0, Math.min(Math.round(((25 - wantedDistance.value) / 25) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
       console.log("Acc Score: ", acc_score); // Logging the MP score
@@ -195,56 +277,50 @@ async function renderLoop() {
   requestAnimationFrame(renderLoop);
 }
 
-/*
-function openFullscreen() {
-  if (videoElement.requestFullscreen) {
-    videoElement.requestFullscreen();
-  } else if (videoElement.mozRequestFullScreen) { // Firefox 
-    videoElement.mozRequestFullScreen();
-  } else if (videoElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
-    videoElement.webkitRequestFullscreen();
-  } else if (videoElement.msRequestFullscreen) { // IE/Edge
-    videoElement.msRequestFullscreen();
+
+// Reset the app to initial state (trying to optimize responsiveness, avoiding reload)
+async function resetApp() {
+  // Stop camera stream
+  if (videoElement.srcObject) {
+    const tracks = videoElement.srcObject.getTracks();
+    tracks.forEach((track) => track.stop());
   }
+
+  // Clear canvas
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+  // Reset dimensions
+  videoElement.width = 0;
+  videoElement.height = 0;
+  canvasElement.width = 0;
+  canvasElement.height = 0;
+
+  // Re-initialize everything
+  await setupCamera();
+  //videoElement.play();
+  //renderLoop(); // or whatever your tracking loop is called
 }
-
-function closeFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.mozCancelFullScreen) { // Firefox
-    document.mozCancelFullScreen();
-  } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
-    document.webkitExitFullscreen();
-  } else if (document.msExitFullscreen) { // IE/Edge
-    document.msExitFullscreen();
-  }
-}
-
-function handleOrientationChange() {
-  const orientation = (window.screen.orientation || {}).type || window.screen.mozOrientation || window.screen.msOrientation;
-
-  if (["landscape-primary", "landscape-secondary"].indexOf(orientation) !== -1) {
-    openFullscreen();
-  } else {
-    closeFullscreen();
-  }
-} 
-*/
-
-
 
 
 async function main() {
-  await setupHandLandmarker();
-  await setupCamera();
+  const [_, __] = await Promise.all([
+    setupCamera(), 
+    setupHandLandmarker(),
+  ]);
 
-  console.log(selectedMode);
+  //Checking if the orientation changes (potrait/landscape)
+  window.addEventListener('orientationchange', () => {
+    //resetApp();
+    location.reload(); // Reload the page
+  });
 
-  //Checking if the window is resized OR orientation changes (potrait/landscape)
-  window.addEventListener('resize', setupCamera);
-
+  // Mobile-specific event listeners
+  if (isNative) {
+    document.addEventListener('deviceready', () => {
+      console.log('Capacitor device ready');
+    });
+  }
   
- 
   /* // Event listener for orientation changes
   window.addEventListener("orientationchange", handleOrientationChange);
   // Initial check in case it's already in landscape
