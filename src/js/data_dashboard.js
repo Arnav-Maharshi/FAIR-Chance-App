@@ -187,7 +187,7 @@ async function getData() {
     const PIP_list = [];
     const DIP_list = [];
     const acc_score_list = [];
-    const url = '../js/ms_data3.csv';
+    const url = '../csv_data/ms_data3.csv';
     const response = await fetch(url);
     const tabledata = await response.text();
     //console.log(tabledata);

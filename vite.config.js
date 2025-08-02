@@ -46,7 +46,11 @@ export default defineConfig({
         {
           src: normalizePath(path.resolve(__dirname, 'src/pages/models/wasm/*')),
           dest: 'pages/models/wasm'
-        }
+        },
+        {
+          src: normalizePath(path.resolve(__dirname, 'src/csv_data/*')),
+          dest: 'csv_data' // goes into dist/csv_data/
+        },
       ],
       watch: {
         reloadPageOnChange: true // reload the page when the files above are changed (provides a hot/live-reloading-like experience for static files)
