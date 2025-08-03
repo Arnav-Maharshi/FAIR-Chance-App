@@ -1,7 +1,10 @@
 /* !! MODULARIZED FUNCTIONS !!
 File for all functions utilized in various pages */
 
-import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs";
+import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+import { FileTransfer } from '@capacitor/file-transfer';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
 
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -460,7 +463,7 @@ export function drawProgressBarV2(ctx, progress) {
 }
 
 
-export function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode) {
+export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode) {
   const csvRows = [];
   csvRows.push(['Frame', 'Timestamp', 'MP', 'PIP', 'DIP', 'AccScore'].join(',')); // Header row with joint names and accuracy score
   for (let i = 0; i < angleHistory.length; i++) {
@@ -472,10 +475,33 @@ export function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestam
     ];
     csvRows.push(row.join(','));
   }
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
+  /*const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const fileUrl = window.URL.createObjectURL(blob);
+  const fileInfo = await Filesystem.getUri({
+    directory: Directory.Documents,
+    path: `${selectedFinger}_${action_mode}_data.csv`
+  });
+
+  await FileTransfer.downloadFile({
+    url: fileUrl,
+    path: fileInfo.uri,
+    progress: true // Optional: to receive progress events
+  })
+
   const a = document.createElement('a');
-  a.href = url;
+  a.href = fileUrl;
   a.download = `${selectedFinger}_${action_mode}_data.csv`;
-  a.click();
+  a.click(); */
+
+  const csvContent = csvRows.join('\n');
+  const fileName = `${selectedFinger}_${action_mode}_data.csv`;
+
+  await Filesystem.writeFile({
+    path: fileName,
+    data: csvContent,
+    directory: Directory.Documents,
+    encoding: 'utf8' // for saving data as strings
+  });
+
+  console.log(`File saved to device: ${Directory.Documents}/${fileName}`);
 }
