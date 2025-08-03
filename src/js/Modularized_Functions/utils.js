@@ -4,7 +4,7 @@ File for all functions utilized in various pages */
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
 import { FileTransfer } from '@capacitor/file-transfer';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-
+import {FileOpener} from '@capawesome-team/capacitor-file-opener'
 
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -492,16 +492,26 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
   a.href = fileUrl;
   a.download = `${selectedFinger}_${action_mode}_data.csv`;
   a.click(); */
-
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed (that's why the +1); parms of .padStart(targetLengthOfString, stringToStartWith) 
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const dateTimeString = `${day}-${month}_${hours}-${minutes}-${seconds}`;
+  
   const csvContent = csvRows.join('\n');
-  const fileName = `${selectedFinger}_${action_mode}_data.csv`;
+  const fileName = `${selectedFinger}_${action_mode}_data ${dateTimeString}.csv`;
 
-  await Filesystem.writeFile({
+  const result = await Filesystem.writeFile({
     path: fileName,
     data: csvContent,
     directory: Directory.Documents,
     encoding: 'utf8' // for saving data as strings
   });
-
-  console.log(`File saved to device: ${Directory.Documents}/${fileName}`);
+  
+  await FileOpener.openFile({
+          path: result.uri,
+        });
+  console.log(`File saved to device: ${result.uri}/${fileName}`);
 }
