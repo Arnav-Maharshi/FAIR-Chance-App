@@ -463,7 +463,7 @@ export function drawProgressBarV2(ctx, progress) {
 }
 
 
-export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode) {
+export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode, isNative) {
   const csvRows = [];
   csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'AccScore'].join(',')); // Header row with joint names and accuracy score
   for (let i = 0; i < angleHistory.length; i++) {
@@ -475,23 +475,7 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
     ];
     csvRows.push(row.join(','));
   }
-  /*const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-  const fileUrl = window.URL.createObjectURL(blob);
-  const fileInfo = await Filesystem.getUri({
-    directory: Directory.Documents,
-    path: `${selectedFinger}_${action_mode}_data.csv`
-  });
 
-  await FileTransfer.downloadFile({
-    url: fileUrl,
-    path: fileInfo.uri,
-    progress: true // Optional: to receive progress events
-  })
-
-  const a = document.createElement('a');
-  a.href = fileUrl;
-  a.download = `${selectedFinger}_${action_mode}_data.csv`;
-  a.click(); */
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed (that's why the +1); parms of .padStart(targetLengthOfString, stringToStartWith) 
   const day = String(now.getDate()).padStart(2, '0');
@@ -499,19 +483,34 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const dateTimeString = `${day}-${month}_${hours}-${minutes}-${seconds}`;
-  
-  const csvContent = csvRows.join('\n');
   const fileName = `${selectedFinger}_${action_mode}_data ${dateTimeString}.csv`;
 
-  const result = await Filesystem.writeFile({
-    path: fileName,
-    data: csvContent,
-    directory: Directory.Documents,
-    encoding: 'utf8' // for saving data as strings
-  });
+
+  if (isNative) { // for mobile devices
+    const csvContent = csvRows.join('\n');
+
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: csvContent,
+      directory: Directory.Documents,
+      encoding: 'utf8' // for saving data as strings
+    });
+    
+    await FileOpener.openFile({
+            path: result.uri,
+          });
+    console.log(`File saved to device: ${result.uri}/${fileName}`);
+  }
+  else { // for web
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const fileUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = `${fileName}`;
+    a.click();
+  }
   
-  await FileOpener.openFile({
-          path: result.uri,
-        });
-  console.log(`File saved to device: ${result.uri}/${fileName}`);
+
+ 
 }

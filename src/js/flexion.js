@@ -298,10 +298,10 @@ document.getElementById('exportButton').onclick = function() {
   if (isNative) {
     // On mobile, we might want to use Capacitor's Filesystem plugin
     // For now, using the web approach
-    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedMode, "flexion");
+    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedMode, "flexion", isNative);
   } else {
     // Use your actual variable names and angle labels
-    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedMode, "flexion");
+    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedMode, "flexion", isNative);
   }
 };
 
