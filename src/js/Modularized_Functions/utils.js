@@ -490,10 +490,11 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
     const csvContent = csvRows.join('\n');
 
     const result = await Filesystem.writeFile({
-      path: fileName,
+      path: `FAIR Chance/${fileName}`,
       data: csvContent,
       directory: Directory.Documents,
-      encoding: 'utf8' // for saving data as strings
+      encoding: 'utf8', // for saving data as strings
+      recursive: true,
     });
     
     await FileOpener.openFile({
