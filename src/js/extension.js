@@ -272,7 +272,7 @@ async function renderLoop() {
 
 document.getElementById('exportButton').onclick = function() {
     // Use your actual variable names and angle labels
-    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, selectedMode, "extension");
+    myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, selectedMode, "extension", isNative);
 };
 
 // Reset the app to initial state (trying to optimize responsiveness, avoiding reload)
