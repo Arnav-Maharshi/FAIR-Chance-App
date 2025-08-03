@@ -465,11 +465,11 @@ export function drawProgressBarV2(ctx, progress) {
 
 export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode) {
   const csvRows = [];
-  csvRows.push(['Frame', 'Timestamp', 'MP', 'PIP', 'DIP', 'AccScore'].join(',')); // Header row with joint names and accuracy score
+  csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'AccScore'].join(',')); // Header row with joint names and accuracy score
   for (let i = 0; i < angleHistory.length; i++) {
     const row = [
       i + 1,                // Frame number (starting from 1)
-      timestampHistory[i],   // Timestamp for this frame
+      (timestampHistory[i]/1000).toFixed(2),   // Timestamp for this frame (in sec)
       ...angleHistory[i],    // '...' spreads the angle values for this frame
       accScoreHistory[i]     // Accuracy score for this frame
     ];
