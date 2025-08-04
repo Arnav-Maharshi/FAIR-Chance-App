@@ -16,6 +16,32 @@ const containerWidth = parentContainer.offsetWidth;
 const containerHeight = parentContainer.offsetHeight;
 let myChart; // Declare myChart variable to hold the chart instance
 
+const uploadFile = document.getElementById("uploadFile");
+let selectedFile;
+
+
+
+
+async function loadFile() {
+    // Proceed with reading the file using FileReader
+    return new Promise((resolve, reject) => {
+        uploadFile.addEventListener("change", () => {
+            selectedFile = uploadFile.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                resolve(reader.result);
+
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(selectedFile); 
+            console.log(`File- ${selectedFile}`);
+        });
+    });
+}
+
+
+
+
 //chartCanvas.width = parentContainer.offsetWidth;
 //chartCanvas.height = parentContainer.offsetHeight;
 
@@ -206,12 +232,17 @@ async function getData() {
     const PIP_list = [];
     const DIP_list = [];
     const acc_score_list = [];
-    const url = '../csv_data/ms_data3.csv';
+    /* const url = await selectedFile; //'../csv_data/ms_data3.csv';
     const response = await fetch(url);
-    const tabledata = await response.text();
-    //console.log(tabledata);
+    const tabledata = await fileContent.text();
+    console.log(tabledata); */
+    //const fileContent = await loadFile();
+    
+    
+    let fileContent = await loadFile();
+    console.log("File Content after func:", fileContent);
 
-    const lines = tabledata.split('\n');
+    const lines = fileContent.split('\n');//tabledata.split('\n');
     console.log(`Lines: ${lines}`);
     const headers = lines[0].split(',');
     console.log(`Headers: ${headers}`);
