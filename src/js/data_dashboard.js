@@ -19,26 +19,28 @@ let myChart; // Declare myChart variable to hold the chart instance
 const uploadFile = document.getElementById("uploadFile");
 let selectedFile;
 
-
-
-
-async function loadFile() {
-    // Proceed with reading the file using FileReader
-    return new Promise((resolve, reject) => {
-        uploadFile.addEventListener("change", () => {
+uploadFile.addEventListener("change", () => {
             selectedFile = uploadFile.files[0];
-            const reader = new FileReader();
-            reader.onload = () => {
-                resolve(reader.result);
+            if (!selectedFile) return;
 
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const csv_data = reader.result;
+                const datapoints = await getData(csv_data); // Call the function to fetch and parse data
+                if (myChart){
+                    myChart.destroy(); // Destroying existing chart instance if any
+                }
+                renderChart(datapoints);
             };
-            reader.onerror = () => reject(reader.error);
+            reader.onerror = () => console.log("Error reading file");
             reader.readAsText(selectedFile); 
             console.log(`File- ${selectedFile}`);
         });
-    });
-}
 
+/*window.addEventListener('DOMContentLoaded', async () => {
+    const datapoints = await getData();
+    renderChart(datapoints);
+});*/
 
 
 
@@ -56,12 +58,9 @@ async function loadFile() {
     chartCanvas.height = containerHeight;
 }*/
 
-renderChart(); // Call the function to render the chart
 
-
-async function renderChart() {
-    const datapoints = await getData(); // Call the function to fetch and log data
-
+async function renderChart(datapoints) {
+    
     const ptRadius = 2; // Set the point radius for the datapoints
     const header_labels = datapoints.headers; // Get the headers from the fetched data
     const colors = ["rgba(241, 59, 59, 1)", "rgba(67, 167, 77, 1)", "rgba(59, 114, 241, 1)", "#ff9800"]; // Define colors for the datasets
@@ -225,7 +224,7 @@ async function renderChart() {
 }
 
 
-async function getData() {
+async function getData(csv_data) {
     const frames_list = [];
     const timestamp_list = [];
     const MP_list = [];
@@ -236,13 +235,11 @@ async function getData() {
     const response = await fetch(url);
     const tabledata = await fileContent.text();
     console.log(tabledata); */
-    //const fileContent = await loadFile();
     
     
-    let fileContent = await loadFile();
-    console.log("File Content after func:", fileContent);
+    console.log("File Content after func:", csv_data);
 
-    const lines = fileContent.split('\n');//tabledata.split('\n');
+    const lines = csv_data.split('\n');//tabledata.split('\n');
     console.log(`Lines: ${lines}`);
     const headers = lines[0].split(',');
     console.log(`Headers: ${headers}`);
