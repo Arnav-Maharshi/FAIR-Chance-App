@@ -19,6 +19,14 @@ let myChart; // Declare myChart variable to hold the chart instance
 const uploadFile = document.getElementById("uploadFile");
 let selectedFile;
 
+// On page/app load (default file provided as input to getDat() function)
+window.addEventListener('DOMContentLoaded', async () => {
+    const default_file = await (await fetch("../csv_data/default_file.csv")).text();
+    const datapoints = await getData(default_file); // Call the function to fetch and parse data 
+    renderChart(datapoints);
+});
+
+// On uploading a new file
 uploadFile.addEventListener("change", () => {
             selectedFile = uploadFile.files[0];
             if (!selectedFile) return;
@@ -37,10 +45,7 @@ uploadFile.addEventListener("change", () => {
             console.log(`File- ${selectedFile}`);
         });
 
-/*window.addEventListener('DOMContentLoaded', async () => {
-    const datapoints = await getData();
-    renderChart(datapoints);
-});*/
+
 
 
 
@@ -60,7 +65,7 @@ uploadFile.addEventListener("change", () => {
 
 
 async function renderChart(datapoints) {
-    
+
     const ptRadius = 2; // Set the point radius for the datapoints
     const header_labels = datapoints.headers; // Get the headers from the fetched data
     const colors = ["rgba(241, 59, 59, 1)", "rgba(67, 167, 77, 1)", "rgba(59, 114, 241, 1)", "#ff9800"]; // Define colors for the datasets
