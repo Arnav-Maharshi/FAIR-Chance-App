@@ -16,7 +16,7 @@ export const HAND_CONNECTIONS = [
   [0, 5], [5, 6], [6, 7], [7, 8], // Index finger
   [5, 9], [9, 10], [10, 11], [11, 12], // Middle finger
   [9, 13], [13, 14], [14, 15], [15, 16], // Ring finger
-  [13, 17], [17, 18], [18, 19], [19, 20], // Pinky
+  [13, 17], [17, 18], [18, 19], [19, 20], // Little
   [0, 17] // Palm base
 ];
 
@@ -77,7 +77,7 @@ export function calculateAngles(landmarks, finger_mode, action_mode,  hand_label
     [15, 14, 13], // PIP
     [16, 15, 14] // DIP
   ];
-  const pinkyF_joints = [
+  const littleF_joints = [
     [18, 17, 0], // MP
     [19, 18, 17], // PIP
     [20, 19, 18] // DIP
@@ -93,7 +93,7 @@ export function calculateAngles(landmarks, finger_mode, action_mode,  hand_label
     indexF_joints,
     middleF_joints,
     ringF_joints,
-    pinkyF_joints,
+    littleF_joints,
     thumb_joints
   ];
 
@@ -108,7 +108,7 @@ export function calculateAngles(landmarks, finger_mode, action_mode,  hand_label
     case "ringF":
       finger_index = 2;
       break;
-    case "pinkyF":
+    case "littleF":
       finger_index = 3;
       break;
     case "thumb":
@@ -155,6 +155,102 @@ export function calculateAngles(landmarks, finger_mode, action_mode,  hand_label
   return angle_list;
 }
 
+export function calculateAnglesV2(landmarks, finger_mode, action_mode,  hand_label) {
+  // mode: "flexion" or "extension" (affects angle calculation)
+  const indexF_joints = [
+    [0, 5, 6], // MP (Metacarpophalangeal joint)
+    [5, 6, 7], // PIP (Proximal Interphalangeal joint)
+    [6, 7, 8] // DIP (Distal Interphalangeal joint)
+  ];
+  const middleF_joints = [
+    [0, 9, 10], // MP
+    [9, 10, 11], // PIP
+    [10, 11, 12] // DIP
+  ];
+  const ringF_joints = [  
+    [0, 13, 14], // MP
+    [13, 14, 15], // PIP
+    [14, 15, 16] // DIP
+  ];
+  const littleF_joints = [
+    [0, 17, 18], // MP
+    [17, 18, 19], // PIP
+    [18, 19, 20] // DIP
+
+  ];
+  const thumb_joints = [
+    [1, 2, 3], // Thumb-MCP
+    [2, 3, 4], // Thumb-IP
+  ];
+  const names = ["MP", "PIP", "DIP"];
+
+  const joints = [
+    indexF_joints,
+    middleF_joints,
+    ringF_joints,
+    littleF_joints,
+    thumb_joints
+  ];
+
+  var finger_index = 0; // Index for the selected finger
+  switch (finger_mode) {
+    case "indexF":
+      finger_index = 0;
+      break;
+    case "middleF":
+      finger_index = 1;
+      break;
+    case "ringF":
+      finger_index = 2;
+      break;
+    case "littleF":
+      finger_index = 3;
+      break;
+    case "thumb":
+      finger_index = 4;
+      break;
+  }
+
+  let angle_list = [];
+  console.log(`${finger_index}, ${finger_mode},`);
+  for (let i = 0; i < joints[finger_index].length; i++) {
+    const [aIdx, bIdx, cIdx] = joints[finger_index][i];
+    //console.log("Calculating angle for joints:", joints[finger_index][i]);
+    const a = landmarks[aIdx];
+    const b = landmarks[bIdx];
+    const c = landmarks[cIdx];
+    const ab = {x: b.x - a.x, y: b.y - a.y};
+    const bc = {x: c.x - b.x, y: c.y - b.y};
+    //let radians = Math.atan2(cb.y, cb.x) - Math.atan2(ab.y, ab.x);
+
+    let dotProduct = ab.x * bc.x + ab.y * bc.y;
+    let magnitude_ab = Math.hypot(ab.x, ab.y);
+    let magnitude_bc = Math.hypot(bc.x, bc.y);
+    let radians = Math.acos(dotProduct/(magnitude_ab * magnitude_bc));
+
+    let angle;
+    if (action_mode === "flexion") {
+      angle = Math.abs((radians * 180.0 / Math.PI)); // Converting radians to degrees
+      // !!!!! REVIEW BELOW CODE !!!!! (Why we we are subtracting)
+      //if (hand_label === "Left") angle = 360 - angle; // Realistic angle value for left hand 
+    } 
+    else if (action_mode === "extension") {
+      /* Flipping radian value for Right hand 
+      as it's angle/coordinate measurement is opposite of Left hand. Basically standardizing
+      Overall better for starting angle measurement from finger-flexed position */  
+      //Actually not required but leeave it here-> radians = -radians; 
+
+      /* Normalising the Left hand angle reading to increase as finger extends/rises 
+      Without below code, 
+      Left Finger flexes -> Angle Increase 
+      Right Finger Flexes -> Angle Decreases */
+      angle = Math.abs((radians*180.0/Math.PI)); // Converting radians to angle
+      //angle = 360-angle; 
+    }
+    angle_list.push({name: names[i], value: Math.round(angle)}); // Storing the angle values
+  }
+  return angle_list;
+}
 export function accuracyScore(angle, finger_mode, action_mode) {
   // Calculate accuracy score based on the angle and finger mode
   let score = 0;
@@ -173,7 +269,7 @@ export function accuracyScore(angle, finger_mode, action_mode) {
         // Hyperflexion angle: above 100 degrees
         score = Math.max(0, Math.min(Math.round(((180-angle) /22) *100), 100)); 
         break;
-      case "pinkyF":
+      case "littleF":
         // Correct flexion range: 55-70 degrees
         // Hyperflexion angle: above 100 degrees
         score = Math.max(0, Math.min(Math.round(((180-angle) /70) *100), 100)); 
@@ -182,6 +278,37 @@ export function accuracyScore(angle, finger_mode, action_mode) {
   }
   else if (action_mode === "extension") {
       score = Math.max(0, Math.min(Math.round(((angle) /180) *100), 100)); // Extension score
+  }
+  return score;
+}
+
+export function accuracyScoreV2(angle, finger_mode, action_mode) {
+  // Calculate accuracy score based on the angle and finger mode
+  let score = 0;
+  if (action_mode === "flexion") {
+    switch (finger_mode) {
+      case "indexF":
+        score = Math.max(0, Math.min(Math.round(((angle) /70) *100), 100)); // Index finger
+        break;  
+      case "middleF":
+        // Correct flexion range: 95-110 degrees
+        // Hyperflexion angle: above 130 degrees
+        score = Math.max(0, Math.min(Math.round(((angle) /80) *100), 100)); // Middle finger
+        break;
+      case "ringF": 
+        // Correct flexion range: 50-70 degrees
+        // Hyperflexion angle: above 100 degrees
+        score = Math.max(0, Math.min(Math.round(((angle) /70) *100), 100)); 
+        break;
+      case "littleF":
+        // Correct flexion range: 55-70 degrees
+        // Hyperflexion angle: above 100 degrees
+        score = Math.max(0, Math.min(Math.round(((angle) /70) *100), 100)); 
+        break;
+    }
+  }
+  else if (action_mode === "extension") {
+      score = Math.max(0, Math.min(Math.round(((90 - angle) /90) *100), 100)); // Extension score
   }
   return score;
 }

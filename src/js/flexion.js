@@ -248,12 +248,12 @@ async function renderLoop() {
       let hand_label = results.handedness[0][0].categoryName; // Detecting Right or Left Hand
       //console.log(hand_label);
       
-      const angles = myUtils.calculateAngles(lmrks, selectedMode, "flexion", hand_label); // Calculating the angles
+      const angles = myUtils.calculateAnglesV2(lmrks, selectedMode, "flexion", hand_label); // Calculating the angles
       //console.log("Angles: ", angles[1].value); // Logging the angles      
       
 
       // Accuracy score is based on the first joint (MP)
-      const acc_score = myUtils.accuracyScore(angles[0].value, selectedMode, "flexion"); // Calculating the accuracy score based on the MP angle
+      const acc_score = myUtils.accuracyScoreV2(angles[0].value, selectedMode, "flexion"); // Calculating the accuracy score based on the MP angle
       //console.log("Acc Score: ", acc_score); // Logging the MP score
       
       /*const currentTime = performance.now();
