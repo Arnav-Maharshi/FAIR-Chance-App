@@ -136,7 +136,7 @@ async function renderChart(datapoints) {
             pointHoverBackgroundColor: pointHoverBackgroundColor, // Set the point hover background color
             pointHoverBorderColor: colors[2], // Set the point hover border color
             pointHoverBorderWidth: pointHoverBorderWidth, // Set the point hover border width
-
+            lineTension: 0.4,
         }
     ]
     },
@@ -150,8 +150,8 @@ async function renderChart(datapoints) {
                 ticks: {
                     callback: function(value, index, ticks) {
                         // Display timetamp labels in seconds
-                        let currentTime = Math.trunc(datapoints.timestamp_list[index]/1000);
-                        let pastTime = Math.trunc(datapoints.timestamp_list[index-1]/1000);
+                        let currentTime = Math.trunc(datapoints.timestamp_list[index]);///1000);
+                        let pastTime = Math.trunc(datapoints.timestamp_list[index-1]);///1000);
                         if (currentTime - pastTime >= 1) {
                             console.log(`Time: ${currentTime}`);
                             return currentTime;
@@ -181,7 +181,7 @@ async function renderChart(datapoints) {
                  callbacks: {
                     title: function(context) {
                         // You can access data related to the hovered element here
-                        const title = (context[0].label/1000).toFixed(2); // Convert milliseconds to seconds and format to 2 decimal places
+                        const title = (context[0].label);
                         return 'Time(sec): ' + title; // Customize your title here
                     },
                     label: function(context) {
