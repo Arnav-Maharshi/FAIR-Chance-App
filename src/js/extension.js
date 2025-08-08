@@ -249,7 +249,7 @@ async function renderLoop() {
       
       // Feedback based on PIP angle (kept delayed to allow for smoother UI)
       setTimeout(() => {
-        const feedback = myUtils.getCompensationFeedbackExtension(angles[1].value);
+        const feedback = myUtils.getCompensationFeedbackFlexion_Extension(angles[1].value);
         feedbackDiv.textContent = feedback.text;
         feedbackDiv.style.color = feedback.color;
       }, 1000); 

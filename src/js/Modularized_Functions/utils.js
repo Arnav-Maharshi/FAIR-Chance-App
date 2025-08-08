@@ -415,6 +415,14 @@ export function getCompensationFeedbackExtension(PIP_angle) {
   return {text: "☹️ Try keeping your finger straight", color: "#f00"};
 }
 
+export function getCompensationFeedbackFlexion_Extension(PIP_angle) {
+  if (PIP_angle <= 5) return {text: "🤩 PERFECT! Keep it up!", color: "#0f0"};
+  else if (PIP_angle <= 20) return {text: "😁 Nice! Straighten it a bit more!", color: "#70ff70"};
+  else if (PIP_angle <= 40) return {text: "😀 Almost there! Straighten your finger", color: "#0fc6ff"};
+  else if (PIP_angle <= 60) return {text: "😐 Keep going!", color: "#4f4fff"};
+  return {text: "☹️ Try keeping your finger straight", color: "#f00"};
+}
+
 export function getCompensationFeedbackAdduction_Abduction(landmarks) {
   let joint_list = [[6, 7], [10, 11], [14, 15], [18, 19]]; // IP joints of each finger
   let joint_names = ["Index", "Middle", "Ring", "Little"]; // Names of fingers
