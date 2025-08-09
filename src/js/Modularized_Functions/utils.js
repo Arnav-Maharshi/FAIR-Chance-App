@@ -325,14 +325,49 @@ export function approxToZero(value, threshold) {
 
 // Measuring and displaying distance of thumb from respective finger joint
 // Hand orientation: Palm facing the camera
-export function oppositionDistance(landmarks, joint_list = [[4, 8], [4, 12], [4, 16], [4, 20]]){
+export function oppositionDistance(landmarks, finger_mode, joint_list = [[4, 8], [4, 12], [4, 16], [4, 20]]){
   //joint_list ; // Joints to loop through
   let distance;
   let distance_list = []; // List to store distances
   let normalizedDistance; // Normalized distance value
   // Initialize accuracy score
-  const names = ["indexF", "middleF", "ringF", "littleF"]; // Names of fingers
+  const names = ["indexF", "middleF", "ringF", "littleF", "allF"]; // Names of fingers
+  
+  var finger_index = 0; // Index for the selected finger
+  switch (finger_mode) {
+    case "indexF":
+      finger_index = 0;
+      break;
+    case "middleF":
+      finger_index = 1;
+      break;
+    case "ringF":
+      finger_index = 2;
+      break;
+    case "littleF":
+      finger_index = 3;
+      break;
+  }
+  console.log(`Finger index- ${finger_index}`);
+
   // Loop through hands
+  if (!(finger_mode === "allF")) { // for individual finger mode
+    for (let i = 0; i < joint_list[finger_index].length; i++) {
+      const [aIdx, bIdx] = joint_list[finger_index];
+      const a = {x: landmarks[aIdx].x, y: landmarks[aIdx].y};//, z: landmarks[aIdx].z};
+      const b = {x: landmarks[bIdx].x, y: landmarks[bIdx].y};//, z: landmarks[bIdx].z};
+
+      distance = approxToZero(100*(Math.sqrt(
+        Math.pow(a.x - b.x, 2) +
+        Math.pow(a.y - b.y, 2)
+      )), 5); // Multiplying by 100 to gain wider range of data & setting threshold to 5 for all fingers
+      
+      normalizedDistance = distance; // Normalizing distance values for all fingers (for setting increasing order)
+
+      distance_list.push({name: names[i], value: distance}); // Storing the distance values
+    }
+  }
+  else { // for all fingers
     for (let i = 0; i < joint_list.length; i++) {
       const [aIdx, bIdx] = joint_list[i];
       const a = {x: landmarks[aIdx].x, y: landmarks[aIdx].y};//, z: landmarks[aIdx].z};
@@ -347,7 +382,8 @@ export function oppositionDistance(landmarks, joint_list = [[4, 8], [4, 12], [4,
 
       distance_list.push({name: names[i], value: distance}); // Storing the distance values
     }
-    return distance_list; // Return the accuracy score list
+  }
+  return distance_list; // Return the accuracy score list
 }
 
 export function adduction_abduction(landmarks, joint_list = [[8, 12], [12, 16], [15, 20], [3, 5]]){
@@ -646,7 +682,60 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
     a.download = `${fileName}`;
     a.click();
   }
-  
+}
 
- 
+export async function exportDistance_AccScoreData(distanceHistory, accScoreHistory, timestampHistory, selectedFinger, isNative) {
+  const csvRows = [];
+  if (!(selectedFinger === "allF")) {
+    csvRows.push(['Frame', 'Timestamp (in sec)', `${selectedFinger}`, 'AccScore'].join(',')); // Header row with joint names and accuracy score
+  }
+  else {
+    csvRows.push(['Frame', 'Timestamp (in sec)', 'indexF', 'middleF', 'ringF', 'littleF'].join(',')); // Header row with joint names and accuracy score
+  }
+  
+  for (let i = 0; i < distanceHistory.length; i++) {
+    const row = [
+      i + 1,                // Frame number (starting from 1)
+      (timestampHistory[i]/1000).toFixed(2),   // Timestamp for this frame (in sec)
+      distanceHistory[i],    // '...' spreads the angle values for this frame
+      accScoreHistory[i]     // Accuracy score for this frame
+    ];
+    csvRows.push(row.join(','));
+  }
+
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed (that's why the +1); parms of .padStart(targetLengthOfString, stringToStartWith) 
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const dateTimeString = `${day}-${month}_${hours}-${minutes}-${seconds}`;
+  const fileName = `${selectedFinger}_opposition_data ${dateTimeString}.csv`;
+
+
+  if (isNative) { // for mobile devices
+    const csvContent = csvRows.join('\n');
+
+    const result = await Filesystem.writeFile({
+      path: `FAIR Chance/${fileName}`,
+      data: csvContent,
+      directory: Directory.Documents,
+      encoding: 'utf8', // for saving data as strings
+      recursive: true,
+    });
+    
+    await FileOpener.openFile({
+            path: result.uri,
+          });
+    console.log(`File saved to device: ${result.uri}/${fileName}`);
+  }
+  else { // for web
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const fileUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = `${fileName}`;
+    a.click();
+  }
 }

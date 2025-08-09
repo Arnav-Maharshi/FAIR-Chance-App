@@ -49,7 +49,7 @@ let video_constraints = {
       height: {ideal: 480}, 
     };
 
-const angleHistory = []; // Array to store angles history
+const distanceHistory = []; // Array to store angles history
 const accScoreHistory = []; // Array to store accuracy score history
 const timestampHistory = []; // Refresh interval in milliseconds
 
@@ -230,13 +230,32 @@ async function renderLoop() {
       myUtils.drawHand(canvasCtx, lmrks); // Drawing the hand overlay
       
       /// !!!!!!*****
-      const distances = myUtils.oppositionDistance(lmrks); // Calculating the distances
-      const wantedDistance = distances.find(d => d.name === selectedMode); // Finding the distance for the selected mode
+      const distances = myUtils.oppositionDistance(lmrks, selectedMode); // Calculating the distances
       
-      // Accuracy score is based on the first joint (MP)
-      const acc_score = Math.max(0, Math.min(Math.round(((25 - wantedDistance.value) / 25) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
-      console.log("Acc Score: ", acc_score); // Logging the MP score
-      myUtils.drawProgressBar(canvasCtx, acc_score); // Drawing the progress bar
+      /* Debugging
+      console.log(`Distances .value- ${distances[0].value}`);
+      console.log(`Distances .map- ${distances.map(a => a.value)[0]}`);
+      console.log(`Distances name- ${distances.map(a => a.name)} .map value- ${distances.map(a => a.value)}`);
+      */
+      
+      if (!(selectedMode === "allF")) { // for individual finger mode, we need to store only 1st value
+        distanceHistory.push(distances.map(a => a.value)[0]);
+
+        const wantedDistance = distances.find(d => d.name === selectedMode); // Finding the distance for the selected mode
+        
+        // Accuracy score is based on the first joint (MP)
+        const acc_score = Math.max(0, Math.min(Math.round(((25 - wantedDistance.value) / 25) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
+        //console.log("Acc Score: ", acc_score); // Logging the MP score
+        accScoreHistory.push(acc_score);
+
+        myUtils.drawProgressBar(canvasCtx, acc_score); // Drawing the progress bar
+      }
+      else { // for allF mode, we need to store all distances
+        distanceHistory.push(distances.map(a => a.value));
+      }
+      
+      timestampHistory.push(performance.now());
+
       
       // Feedback based on PIP angle
       //const feedback = myUtils.getCompensationFeedbackFlexion(angles[1].value); 
@@ -276,6 +295,18 @@ async function renderLoop() {
   }
   requestAnimationFrame(renderLoop);
 }
+
+
+document.getElementById('exportButton').onclick = function() {
+  if (isNative) {
+    // On mobile, we might want to use Capacitor's Filesystem plugin
+    // For now, using the web approach
+    myUtils.exportDistance_AccScoreData(distanceHistory, accScoreHistory, timestampHistory, selectedMode, isNative);
+  } else {
+    // Use your actual variable names and angle labels
+    myUtils.exportDistance_AccScoreData(distanceHistory, accScoreHistory, timestampHistory, selectedMode, isNative);
+  }
+};
 
 
 // Reset the app to initial state (trying to optimize responsiveness, avoiding reload)

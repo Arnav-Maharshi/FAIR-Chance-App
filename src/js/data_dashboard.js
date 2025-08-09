@@ -80,7 +80,7 @@ async function renderChart(datapoints) {
         labels: datapoints.timestamp_list,
         datasets: [{
             label: header_labels[2], // MP
-            data: datapoints.MP_list,
+            data: datapoints.c3_list,
 
             fill: false,
             pointRadius: ptRadius,
@@ -95,7 +95,7 @@ async function renderChart(datapoints) {
         },
         {
             label: header_labels[3], // PIP
-            data: datapoints.PIP_list,
+            data: datapoints.c4_list,
 
             fill: false,
             pointRadius: ptRadius,
@@ -110,7 +110,7 @@ async function renderChart(datapoints) {
         },
         {
             label: header_labels[4], // DIP
-            data: datapoints.DIP_list,
+            data: datapoints.c5_list,
 
             fill: false,
             pointRadius: ptRadius,
@@ -219,6 +219,18 @@ async function renderChart(datapoints) {
                     },*/
 
                 }
+            },
+            legend: {
+                labels: {
+                    filter: function(legendItem, data) {
+                        const dataset = data.datasets[legendItem.datasetIndex];
+                        // Check if the dataset data is undefined, null, or empty
+                        if (!dataset.data || dataset.data.length === 0) {
+                            return false;
+                        }
+                        return true;
+                    }
+                }
             }
         },
         layout: {
@@ -232,10 +244,11 @@ async function renderChart(datapoints) {
 async function getData(csv_data) {
     const frames_list = [];
     const timestamp_list = [];
-    const MP_list = [];
-    const PIP_list = [];
-    const DIP_list = [];
-    const acc_score_list = [];
+    const c3_list = [];
+    const c4_list = [];
+    const c5_list = [];
+    const c6_list = [];
+    const c7_list = [];
     /* const url = await selectedFile; //'../csv_data/ms_data3.csv';
     const response = await fetch(url);
     const tabledata = await fileContent.text();
@@ -255,26 +268,51 @@ async function getData(csv_data) {
         const column = row.split(',');
         const frames = column[0];
         const timestamp = column[1]; // Assuming the second column is the timestamp
-        const MP = column[2];
-        const PIP = column[3];
-        const DIP = column[4];
-        const acc_score = column[5];
+        
 
         frames_list.push(frames);
         timestamp_list.push(timestamp);
-        MP_list.push(MP);
-        PIP_list.push(PIP);
-        DIP_list.push(DIP);
-        acc_score_list.push(acc_score);
+
+        if (headers[2]==="MP") {
+            const MP = column[2];
+            const PIP = column[3];
+            const DIP = column[4];
+            const acc_score = column[5];
+
+            c3_list.push(MP);
+            c4_list.push(PIP);
+            c5_list.push(DIP);
+            c6_list.push(acc_score);
+        } 
+        else if (headers[3]==="AccScore") {
+            const some_finger = column[2];
+            const acc_score = column[3];
+
+            c3_list.push(some_finger);
+            c4_list.push(acc_score);
+        }
+        else {
+            const indexF = column[2];
+            const middleF = column[3];
+            const ringF = column[4];
+            const littleF = column[5];
+            const acc_score = column[6];
+
+            c3_list.push(indexF);
+            c4_list.push(middleF);
+            c5_list.push(ringF);
+            c6_list.push(littleF);
+            c7_list.push(acc_score);
+        }
     });
 
     console.log(`frames: ${frames_list}`);
-    console.log(`MP: ${MP_list}`);
-    console.log(`PIP: ${PIP_list}`);
-    console.log(`DIP: ${DIP_list}`);
-    console.log(`acc_score: ${acc_score_list}`);
+    console.log(`MP: ${c3_list}`);
+    console.log(`PIP: ${c4_list}`);
+    console.log(`DIP: ${c5_list}`);
+    console.log(`acc_score: ${c6_list}`);
 
-    return { headers, frames_list, timestamp_list, MP_list, PIP_list, DIP_list, acc_score_list };
+    return { headers, frames_list, timestamp_list, c3_list, c4_list, c5_list, c6_list, c7_list };
 }
 
 function resetChartZoom() {
