@@ -124,8 +124,8 @@ async function renderChart(datapoints) {
             pointHoverBorderWidth: pointHoverBorderWidth, // Set the point hover border width
         },
         {
-            label: "Accuracy Score",
-            data: datapoints.acc_score_list,
+            label: header_labels[5],
+            data: datapoints.c6_list,
             
             fill: false,
             pointRadius: ptRadius,
@@ -244,6 +244,7 @@ async function renderChart(datapoints) {
 async function getData(csv_data) {
     const frames_list = [];
     const timestamp_list = [];
+    const acc_score_list = [];
     const c3_list = [];
     const c4_list = [];
     const c5_list = [];
@@ -283,6 +284,8 @@ async function getData(csv_data) {
             c4_list.push(PIP);
             c5_list.push(DIP);
             c6_list.push(acc_score);
+
+            acc_score_list.push(acc_score);
         } 
         else if (headers[3]==="AccScore") {
             const some_finger = column[2];
@@ -290,6 +293,8 @@ async function getData(csv_data) {
 
             c3_list.push(some_finger);
             c4_list.push(acc_score);
+
+            acc_score_list.push(acc_score);
         }
         else {
             const indexF = column[2];
