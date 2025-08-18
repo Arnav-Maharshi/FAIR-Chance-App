@@ -474,6 +474,41 @@ export function adduction_abduction(landmarks, joint_list = [[8, 12], [12, 16], 
 }
 
 
+// Measuring angle of each finger from midline of hand (middle finger)
+export function adduction_abductionV2(landmarks){
+  const joint_list = [[10, 9, 6], // Middle-Index
+                [10, 9, 14], // Middle-Ring
+                [10, 9, 18], // Middle-Little
+                [10, 9, 4]]; // Middle-Thumb
+  let angle;
+  let angle_list = []; // List to store distances
+  // Initialize accuracy score
+  const names = ["Middle-Index", "Middle-Ring", "Middle-Little", "Middle-Thumb"]; // Names of finger pairs
+
+  const a = landmarks[10]; // PIP of Middle finger
+  const b = landmarks[9]; // Base of wrist
+  // Loop through joint pairs
+  for (let i = 0; i < joint_list.length; i++) {
+    const cIdx = joint_list[i][2]; // index of PIP keypoint of respective finger
+    const c = landmarks[cIdx];  // PIP of respective finger
+
+    const ba = {x: a.x - b.x, y: a.y - b.y};
+    const bc = {x: c.x - b.x, y: c.y - b.y};
+
+    let dotProduct = ba.x * bc.x + ba.y * bc.y;
+    let magnitude_ba = Math.hypot(ba.x, ba.y);
+    let magnitude_bc = Math.hypot(bc.x, bc.y);
+    let radians = Math.acos(dotProduct/(magnitude_ba * magnitude_bc));
+
+    angle = Math.abs((radians * 180.0 / Math.PI)); // Converting radians to degrees
+
+    angle_list.push({name: names[i], value: Math.round(angle)}); // Storing the distance values
+  }
+
+  return angle_list; // Return the accuracy score list
+}
+
+
 // Feedback for flexion
 export function getCompensationFeedbackFlexion(PIP_angle) {
   if (PIP_angle >= 175) return {text: "🤩 PERFECT! Keep it up!", color: "#0f0"};
