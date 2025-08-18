@@ -230,28 +230,24 @@ async function renderLoop() {
       myUtils.drawHand(canvasCtx, lmrks); // Drawing the hand overlay
       
       /// !!!!!!*****
-      const distances = myUtils.oppositionDistance(lmrks, selectedMode); // Calculating the distances
+      const distances = myUtils.oppositionDistanceV2(lmrks, selectedMode); // Calculating the distances
       
       /* Debugging
       console.log(`Distances .value- ${distances[0].value}`);
       console.log(`Distances .map- ${distances.map(a => a.value)[0]}`);
       console.log(`Distances name- ${distances.map(a => a.name)} .map value- ${distances.map(a => a.value)}`);
       */
-      
-      if (!(selectedMode === "allF")) { // for individual finger mode, we need to store only 1st value
-        distanceHistory.push(distances.map(a => a.value)[0]);
 
-        const wantedDistance = distances.find(d => d.name === selectedMode); // Finding the distance for the selected mode
-        
+      const wantedDistance = distances.find(d => d.name === selectedMode); // Finding the distance for the selected mode
+      distanceHistory.push(distances.map(a => a.value)); 
+      
+      if (!(selectedMode === "allF")) { // only calculating accuracy score & displaying progress bar for individual finger    
         // Accuracy score is based on the first joint (MP)
         const acc_score = Math.max(0, Math.min(Math.round(((25 - wantedDistance.value) / 25) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
         //console.log("Acc Score: ", acc_score); // Logging the MP score
         accScoreHistory.push(acc_score);
-
+        console.log(`Wanted distance: ${wantedDistance.value}`);
         myUtils.drawProgressBar(canvasCtx, acc_score); // Drawing the progress bar
-      }
-      else { // for allF mode, we need to store all distances
-        distanceHistory.push(distances.map(a => a.value));
       }
       
       timestampHistory.push(performance.now());
@@ -268,7 +264,45 @@ async function renderLoop() {
       canvasCtx.font = `${canvasCtx.fontSize}px Arial`;
       const textCoords =  {x: canvasElement.width * 0.03, y: canvasElement.height * 0.1}; // Text coordinates for displaying distance values
 
-      switch (selectedMode) {
+      const modeLabelMap = { // Mapping mode names to their corresponding labels 
+        indexF:  "Index-Finger & Thumb",
+        middleF: "Middle-Finger & Thumb",
+        ringF: "Ring-Finger & Thumb",
+        littleF: "Little-Finger & Thumb"
+      };
+
+      // More efficient code to display the distances to user
+      if (selectedMode === "allF") {
+        // Display all available distances
+        distances.forEach((a, i) => {
+          canvasCtx.fillText(
+            `${modeLabelMap[a.name]}: ${a.value}mm`,
+            textCoords.x,
+            80 + i * canvasElement.height * 0.1
+          );
+        });
+      } 
+      else if (modeLabelMap[selectedMode]) {
+        // Display only the current finger's distance
+        const label = modeLabelMap[selectedMode];
+        // Defensive check in case distances[] does not have this index
+        if (wantedDistance) {
+          canvasCtx.fillText(
+            `${label}: ${wantedDistance.value}mm`,
+            textCoords.x,
+            textCoords.y
+          );
+        } 
+        else {
+          canvasCtx.fillText(
+            `${label}: N/A`,
+            textCoords.x,
+            textCoords.y
+          );
+        }
+      }
+
+      /*switch (selectedMode) {
         case 'indexF':  
           canvasCtx.fillText(`Index-Finger & Thumb: ${distances[0].value}mm`, textCoords.x, textCoords.y);
           break;  
@@ -286,7 +320,7 @@ async function renderLoop() {
             canvasCtx.fillText(`${a.name}-Thumb: ${a.value}mm`, textCoords.x, 80 + i * canvasElement.height * 0.1);
           });
           break;
-      }
+      }*/
     } else {
       feedbackDiv.textContent = 'Show your hand to the camera!';
       feedbackDiv.style.color = '#ffd700';

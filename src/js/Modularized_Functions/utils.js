@@ -386,6 +386,48 @@ export function oppositionDistance(landmarks, finger_mode, joint_list = [[4, 8],
   return distance_list; // Return the accuracy score list
 }
 
+// More efficient function to calculate opposition distance (using a loop only for 'allF' mode)
+export function oppositionDistanceV2(landmarks, finger_mode, joint_list = [[4, 8], [4, 12], [4, 16], [4, 20]]){
+  //joint_list ; // Joints to loop through
+  let distance;
+  let distance_list = []; // List to store distances
+  let normalizedDistance; // Normalized distance value
+  // Initialize accuracy score
+  const names = ["indexF", "middleF", "ringF", "littleF", "allF"]; // Names of fingers
+
+  var finger_index = 0; // Index for the selected finger
+  console.log(`Finger index- ${finger_index}`);
+
+  if (finger_mode === "allF") { // for all fingers
+    for (let i = 0; i < joint_list.length; i++) {
+      const [aIdx, bIdx] = joint_list[i];
+      const a = landmarks[aIdx];
+      const b = landmarks[bIdx];
+
+      distance = approxToZero(100*(Math.sqrt(
+        Math.pow(a.x - b.x, 2) +
+        Math.pow(a.y - b.y, 2)
+      )), 5); // Multiplying by 100 to gain wider range of data & setting threshold to 5 for all fingers
+      
+      distance_list.push({name: names[i], value: distance}); // Storing the distance values
+    }
+  }
+  else {
+    const [aIdx, bIdx] = joint_list[names.indexOf(finger_mode)];
+    const a = landmarks[aIdx];
+    const b = landmarks[bIdx];
+
+    distance = approxToZero(100*(Math.sqrt(
+      Math.pow(a.x - b.x, 2) +
+      Math.pow(a.y - b.y, 2)
+    )), 5); // Multiplying by 100 to gain wider range of data & setting threshold to 5 for all fingers
+    distance_list.push({name: finger_mode, value: distance}); // Storing the distance values
+  }
+  return distance_list; // Return the accuracy score list
+}
+
+
+
 export function adduction_abduction(landmarks, joint_list = [[8, 12], [12, 16], [15, 20], [3, 5]]){
   let distance;
   let distance_list = []; // List to store distances
@@ -590,7 +632,7 @@ export function drawProgressBar(ctx, progress) {
   ctx.strokeRect(barX, barY, barWidth, barHeight);
   // Text
   ctx.fontSize = Math.max(12, barHeight * 0.8);   // Calculate font size relative to bar height or canvas height
-  ctx.font = `${ctx.fontSize}px Arial`;
+  ctx.font = `${ctx.fontSize}px Monospace`;
   ctx.fillStyle = '#fff';
   ctx.fillText(`${Math.round(progress)}%`, barX + barWidth + (canvasWidth * 0.03), barY + (barHeight / 1.5));
   ctx.restore(); // restores the saved drawing state 
@@ -636,7 +678,7 @@ export function drawProgressBarV2(ctx, progress) {
 
 export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode, isNative) {
   const csvRows = [];
-  csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'AccScore'].join(',')); // Header row with joint names and accuracy score
+  csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
   for (let i = 0; i < angleHistory.length; i++) {
     const row = [
       i + 1,                // Frame number (starting from 1)
@@ -687,7 +729,7 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
 export async function exportDistance_AccScoreData(distanceHistory, accScoreHistory, timestampHistory, selectedFinger, isNative) {
   const csvRows = [];
   if (!(selectedFinger === "allF")) {
-    csvRows.push(['Frame', 'Timestamp (in sec)', `${selectedFinger}`, 'AccScore'].join(',')); // Header row with joint names and accuracy score
+    csvRows.push(['Frame', 'Timestamp (in sec)', `${selectedFinger}`, 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
   }
   else {
     csvRows.push(['Frame', 'Timestamp (in sec)', 'indexF', 'middleF', 'ringF', 'littleF'].join(',')); // Header row with joint names and accuracy score
