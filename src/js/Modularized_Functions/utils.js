@@ -481,12 +481,17 @@ export function adduction_abductionV2(landmarks){
                 [10, 9, 18], // Middle-Little
                 [10, 9, 4]]; // Middle-Thumb
   let angle;
+  let change_in_angle;
   let angle_list = []; // List to store distances
   // Initialize accuracy score
-  const names = ["Middle-Index", "Middle-Ring", "Middle-Little", "Middle-Thumb"]; // Names of finger pairs
+  const names = ["Index-Middle", "Ring-Middle", "Little-Middle", "Thumb-Middle"]; // Names of finger pairs
+  const baseline_angles = [17, // Middle-index baseline angle
+                          15, // Middle-ring baseline angle
+                          47, // Middle-little baseline angle
+                          50]; // Middle-thumb baseline angle
 
   const a = landmarks[10]; // PIP of Middle finger
-  const b = landmarks[9]; // Base of wrist
+  const b = landmarks[9]; // MP of Middle finger
   // Loop through joint pairs
   for (let i = 0; i < joint_list.length; i++) {
     const cIdx = joint_list[i][2]; // index of PIP keypoint of respective finger
@@ -501,8 +506,9 @@ export function adduction_abductionV2(landmarks){
     let radians = Math.acos(dotProduct/(magnitude_ba * magnitude_bc));
 
     angle = Math.abs((radians * 180.0 / Math.PI)); // Converting radians to degrees
+    change_in_angle = Math.round(Math.abs(angle - baseline_angles[i])); // calculating change from the baseline angle for each finger
 
-    angle_list.push({name: names[i], value: Math.round(angle)}); // Storing the distance values
+    angle_list.push({name: names[i], value: Math.round(angle), change_value: change_in_angle}); // Storing the distance values
   }
 
   return angle_list; // Return the accuracy score list
