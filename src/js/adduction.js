@@ -230,11 +230,27 @@ async function renderLoop() {
       myUtils.drawHand(canvasCtx, lmrks); // Drawing the hand overlay
       
       /// !!!!!!*****
-      const distances = myUtils.adduction_abduction(lmrks); // Calculating the distances
+      //const distances = myUtils.adduction_abduction(lmrks); // Calculating the distances
       
+      const angles = myUtils.adduction_abductionV2(lmrks); // Getting the angles for all fingers
+      angles.forEach(a => console.log(`${a.name} angle: `, a.value + `\n${a.name} Angle Change: `, a.change_value)); // Logging the angles for all fingers 
+
+      const abductionTargets = [
+        20, // Index_Middle
+        12, //  Ring_Middle
+        25, // Little_Middle 
+        80,// Thumb-Middle
+      ];
+
       let acc_score;
       let acc_score_list = [];
-      distances.forEach((d, i) => {
+
+      angles.forEach((pair, i) => {
+        acc_score = Math.max(0, Math.min(Math.round(((abductionTargets[i] - pair.change_value)/abductionTargets[i]) * 100), 100));
+        acc_score_list.push({name: pair.name, value: acc_score}); // Storing the accuracy score
+      })
+      
+      /*distances.forEach((d, i) => {
         if (i===0 || i === 2){
           acc_score = Math.max(0, Math.min(Math.round(((30 - d.value) / 30) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
         }
@@ -245,13 +261,12 @@ async function renderLoop() {
           acc_score = Math.max(0, Math.min(Math.round(((15 - d.value) / 15) * 100), 100)); // Calculating the MP score(accuracy percentage) out of 77 degrees
         }
         acc_score_list.push({name: d.name, value: acc_score}); // Storing the accuracy score
+      });*/
+
+      acc_score_list.forEach((score) => {
+        console.log(`${score.name} Acc Score: `, score.value); // Logging the accuracy score
       });
 
-      console.log("Thumb Acc Score: ", acc_score_list[3].value);
-
-      /*acc_score_list.forEach((score) => {
-        console.log(`${score.name} Acc Score: `, score.value); // Logging the accuracy score
-      });*/
       if (selectedMode === "modeIMRL") {
         myUtils.drawProgressBarV2(canvasCtx, acc_score_list, selectedMode); // Drawing the progress bar for IMRL mode. ONLY Accessing accuracy scores for Index, Middle & Ring Finger
       } else {
@@ -278,9 +293,9 @@ async function renderLoop() {
       canvasCtx.fontSize = Math.max(24, canvasElement.height* 0.05);   // Calculate font size relative to bar height or canvas height
       canvasCtx.font = `${canvasCtx.fontSize}px Arial`;
 
-      distances.forEach((a, i) => {
+      /*distances.forEach((a, i) => {
         canvasCtx.fillText(`${a.name}: ${a.value}mm`, canvasElement.width * 0.03, 80 + i * canvasElement.height * 0.1);
-      });
+      });*/
     } else {
       feedbackDiv.textContent = 'Show your hand to the camera!';
       feedbackDiv.style.color = '#ffd700';
