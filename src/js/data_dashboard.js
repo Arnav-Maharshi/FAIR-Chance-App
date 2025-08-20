@@ -68,7 +68,7 @@ async function renderChart(datapoints) {
 
     const ptRadius = 2; // Set the point radius for the datapoints
     const header_labels = datapoints.headers; // Get the headers from the fetched data
-    const colors = ["rgba(241, 59, 59, 1)", "rgba(67, 167, 77, 1)", "rgba(59, 114, 241, 1)", "#ff9800"]; // Define colors for the datasets
+    const colors = ["rgba(241, 59, 59, 1)",  "rgba(225, 218, 0, 1)", "rgba(59, 114, 241, 1)"]; // Define colors for the datasets
     const line_tension = 0.3; // Set the line tension for the chart
     const pointHoverRadius = 6; // Set the point hover radius for better visibility
     const pointHoverBackgroundColor = "rgba(0, 255, 200, 0.4)"; // Set the point hover background color
@@ -99,13 +99,14 @@ async function renderChart(datapoints) {
 
             fill: false,
             pointRadius: ptRadius,
-            backgroundColor: colors[1],
-            borderColor: colors[1],
+            backgroundColor: header_labels[3] === "Accuracy Score" ? "rgba(67, 167, 77, 1)" : colors[1],
+            borderColor: header_labels[3] === "Accuracy Score" ? "rgba(67, 167, 77, 1)" : colors[1],
+            pointHoverBorderColor: header_labels[3] === "Accuracy Score" ? "rgba(67, 167, 77, 1)" : colors[1], // Set the point hover border color
+
             lineTension: line_tension,
             
             pointHoverRadius: pointHoverRadius, // Set the point hover radius
             pointHoverBackgroundColor: pointHoverBackgroundColor, // Set the point hover background color
-            pointHoverBorderColor: colors[1], // Set the point hover border color
             pointHoverBorderWidth: pointHoverBorderWidth, // Set the point hover border width
         },
         {
@@ -129,12 +130,12 @@ async function renderChart(datapoints) {
             
             fill: false,
             pointRadius: ptRadius,
-            backgroundColor: "#ff9800",
-            borderColor: "rgba(255, 152, 0, 1)",
+            backgroundColor: "rgba(67, 167, 77, 1)",
+            borderColor: "rgba(67, 167, 77, 1)",
             
             pointHoverRadius: pointHoverRadius, // Set the point hover radius
             pointHoverBackgroundColor: pointHoverBackgroundColor, // Set the point hover background color
-            pointHoverBorderColor: colors[2], // Set the point hover border color
+            pointHoverBorderColor: "rgba(67, 167, 77, 1)", // Set the point hover border color
             pointHoverBorderWidth: pointHoverBorderWidth, // Set the point hover border width
             lineTension: 0.4,
         }
@@ -274,7 +275,7 @@ async function getData(csv_data) {
         frames_list.push(frames);
         timestamp_list.push(timestamp);
 
-        if (headers[2]==="MP") {
+        if (headers[2]==="MP") { // for flexion/extension
             const MP = column[2];
             const PIP = column[3];
             const DIP = column[4];
@@ -286,8 +287,17 @@ async function getData(csv_data) {
             c6_list.push(acc_score);
 
             acc_score_list.push(acc_score);
-        } 
-        else if (headers[3]==="AccScore") {
+        }
+        else if (headers[2]==="Index-Middle") { // for IMRL abduction/adduction mode
+            const index_middle = column[2];
+            const ring_middle = column[3];
+            const little_middle = column[4];
+
+            c3_list.push(index_middle);
+            c4_list.push(ring_middle);
+            c5_list.push(little_middle);
+        }
+        else if (headers[3]==="Accuracy Score") { // for individual finger opposition files & thumb abduction/adduction
             const some_finger = column[2];
             const acc_score = column[3];
 
@@ -296,7 +306,7 @@ async function getData(csv_data) {
 
             acc_score_list.push(acc_score);
         }
-        else {
+        else { // for all finger opposition files
             const indexF = column[2];
             const middleF = column[3];
             const ringF = column[4];

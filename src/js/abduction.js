@@ -231,7 +231,7 @@ async function renderLoop() {
       /// !!!!!!*****
       //const distances = myUtils.adduction_abduction(lmrks); // Calculating the distances
       
-      const angles = myUtils.adduction_abductionV2(lmrks); // Getting the angles for all fingers
+      const angles = myUtils.adduction_abductionV2(lmrks, selectedMode); // Getting the angles for all fingers
       
       angles.forEach(a => console.log(`${a.name} angle: `, a.value + `\n${a.name} Angle Change: `, a.change_value)); // Logging the angles for all fingers 
       
@@ -244,10 +244,16 @@ async function renderLoop() {
       let acc_score;
       let acc_score_list = [];
 
+      
       angles.forEach((pair, i) => {
-        acc_score = Math.max(0, Math.min(Math.round((pair.change_value/abductionTargets[i]) * 100), 100));
+        if (selectedMode === "modeIMRL") {
+          acc_score = Math.max(0, Math.min(Math.round((pair.change_value/abductionTargets[i]) * 100), 100));
+        } else {
+          acc_score = Math.max(0, Math.min(Math.round((pair.change_value/abductionTargets[3]) * 100), 100));
+        }
         acc_score_list.push({name: pair.name, value: acc_score}); // Storing the accuracy score
-      })
+      });
+    
       /*distances.forEach((d, i) => {
         switch (i) {
           case 0: // Index Finger
@@ -271,10 +277,17 @@ async function renderLoop() {
         console.log(`${score.name} Acc Score: `, score.value); // Logging the accuracy score
       });
 
+      angleHistory.push(angles.map(a => a.change_value));
+      timestampHistory.push(performance.now()); // Storing the timestamp for each angle record
+
+      if (selectedMode === "modethumb") {
+        accScoreHistory.push(acc_score);
+      }
+
       if (selectedMode === "modeIMRL") {
         myUtils.drawProgressBarV2(canvasCtx, acc_score_list, selectedMode); // Drawing the progress bar for IMRL mode. ONLY Accessing accuracy scores for Index, Middle & Ring Finger
       } else {
-        myUtils.drawProgressBar(canvasCtx, acc_score_list[3].value); // drawProgressBar() is for Thumb. This function needs a number as argument
+        myUtils.drawProgressBar(canvasCtx, acc_score); // drawProgressBar() is for Thumb. This function needs a number as argument
       }
       //myUtils.drawProgressBarV2(canvasCtx, acc_score_list); // Drawing the progress bar
       
@@ -308,6 +321,10 @@ async function renderLoop() {
   }
   requestAnimationFrame(renderLoop);
 }
+
+document.getElementById('exportButton').addEventListener('click', () =>{
+  myUtils.exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedMode, "abduction", isNative);
+});
 
 
 // Reset the app to initial state (trying to optimize responsiveness, avoiding reload)

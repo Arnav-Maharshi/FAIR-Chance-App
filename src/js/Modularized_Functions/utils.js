@@ -475,7 +475,7 @@ export function adduction_abduction(landmarks, joint_list = [[8, 12], [12, 16], 
 
 
 // Measuring angle of each finger from midline of hand (middle finger)
-export function adduction_abductionV2(landmarks){
+export function adduction_abductionV2(landmarks, selectedMode){
   const joint_list = [[10, 9, 6], // Middle-Index
                 [10, 9, 14], // Middle-Ring
                 [10, 9, 18], // Middle-Little
@@ -492,9 +492,29 @@ export function adduction_abductionV2(landmarks){
 
   const a = landmarks[10]; // PIP of Middle finger
   const b = landmarks[9]; // MP of Middle finger
-  // Loop through joint pairs
-  for (let i = 0; i < joint_list.length; i++) {
-    const cIdx = joint_list[i][2]; // index of PIP keypoint of respective finger
+  
+  if (selectedMode === "modeIMRL"){
+    // Loop through joint pairs
+    for (let i = 0; i < (joint_list.slice(0,3)).length; i++) {
+      const cIdx = joint_list[i][2]; // index of PIP keypoint of Index, middle, ring finger
+      const c = landmarks[cIdx];  // PIP of respective finger
+
+      const ba = {x: a.x - b.x, y: a.y - b.y};
+      const bc = {x: c.x - b.x, y: c.y - b.y};
+
+      let dotProduct = ba.x * bc.x + ba.y * bc.y;
+      let magnitude_ba = Math.hypot(ba.x, ba.y);
+      let magnitude_bc = Math.hypot(bc.x, bc.y);
+      let radians = Math.acos(dotProduct/(magnitude_ba * magnitude_bc));
+
+      angle = Math.abs((radians * 180.0 / Math.PI)); // Converting radians to degrees
+      change_in_angle = Math.round(Math.abs(angle - baseline_angles[i])); // calculating change from the baseline angle for each finger
+
+      angle_list.push({name: names[i], value: Math.round(angle), change_value: change_in_angle}); // Storing the angle values
+    }
+  }
+  else {
+    const cIdx = joint_list[3][2]; // index of PIP keypoint of THUMB
     const c = landmarks[cIdx];  // PIP of respective finger
 
     const ba = {x: a.x - b.x, y: a.y - b.y};
@@ -506,10 +526,11 @@ export function adduction_abductionV2(landmarks){
     let radians = Math.acos(dotProduct/(magnitude_ba * magnitude_bc));
 
     angle = Math.abs((radians * 180.0 / Math.PI)); // Converting radians to degrees
-    change_in_angle = Math.round(Math.abs(angle - baseline_angles[i])); // calculating change from the baseline angle for each finger
+    change_in_angle = Math.round(Math.abs(angle - baseline_angles[3])); // calculating change from the baseline angle for each finger
 
-    angle_list.push({name: names[i], value: Math.round(angle), change_value: change_in_angle}); // Storing the distance values
+    angle_list.push({name: names[3], value: Math.round(angle), change_value: change_in_angle}); // Storing the distance values
   }
+  
 
   return angle_list; // Return the accuracy score list
 }
@@ -685,8 +706,8 @@ export function drawProgressBarV2(ctx, progress) {
   // Ensure 'x', 'y', 'width', 'height' are relative to the canvas size
   const canvasWidth = ctx.canvas.width; // Get the current drawing width of the canvas
   const canvasHeight = ctx.canvas.height; // Get the current drawing height of the canvas
-  const barWidth = canvasWidth * 0.23; // Progress bar width is 70% of canvas width
-  const barHeight = canvasHeight * 0.035; // Progress bar width is 6% of canvas width
+  const barWidth = canvasWidth * 0.23; // Progress bar width is 23% of canvas width
+  const barHeight = canvasHeight * 0.035; // Progress bar width is 3.5% of canvas width
   
   for (let i = progress.length - 1; i >= 0; i--) {
     const barX = canvasWidth * 0.25 - (barWidth - i * canvasHeight * 0.6) //(barWidth - (0.3) * canvasWidth*i);
@@ -719,7 +740,17 @@ export function drawProgressBarV2(ctx, progress) {
 
 export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, timestampHistory, selectedFinger, action_mode, isNative) {
   const csvRows = [];
-  csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
+  if (action_mode === "flexion" || action_mode === "extension"){
+    csvRows.push(['Frame', 'Timestamp (in sec)', 'MP', 'PIP', 'DIP', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
+  }
+  else if (action_mode === "abduction" || action_mode === "adduction"){
+    if (selectedFinger === "modeIMRL"){
+      csvRows.push(['Frame', 'Timestamp (in sec)', 'Index-Middle', 'Ring-Middle', 'Little-Middle'].join(',')); // Header row with joint names and accuracy scorePIP', 'DIP', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
+    } 
+    else if (selectedFinger === "modethumb"){
+      csvRows.push(['Frame', 'Timestamp (in sec)', 'Thumb-Middle', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy scorePIP', 'DIP', 'Accuracy Score'].join(',')); // Header row with joint names and accuracy score
+    }
+    }
   for (let i = 0; i < angleHistory.length; i++) {
     const row = [
       i + 1,                // Frame number (starting from 1)
@@ -731,6 +762,7 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
   }
 
   const now = new Date();
+  // for month name->  now.toLocaleString('default', { month: 'long' });
   const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed (that's why the +1); parms of .padStart(targetLengthOfString, stringToStartWith) 
   const day = String(now.getDate()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
