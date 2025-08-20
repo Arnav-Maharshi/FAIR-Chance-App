@@ -762,14 +762,13 @@ export async function exportAngle_AccScoreData(angleHistory, accScoreHistory, ti
   }
 
   const now = new Date();
-  // for month name->  now.toLocaleString('default', { month: 'long' });
-  const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed (that's why the +1); parms of .padStart(targetLengthOfString, stringToStartWith) 
+  const month = now.toLocaleString('default', { month: 'long' });
   const day = String(now.getDate()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
-  const dateTimeString = `${day}-${month}_${hours}-${minutes}-${seconds}`;
-  const fileName = `${selectedFinger}_${action_mode}_data ${dateTimeString}.csv`;
+  const dateTimeString = `${month} ${day} (${hours}-${minutes}-${seconds})`;
+  const fileName = `${dateTimeString} ${selectedFinger}_${action_mode}_data.csv`;
 
 
   if (isNative) { // for mobile devices
