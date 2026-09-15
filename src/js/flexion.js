@@ -279,7 +279,7 @@ async function renderLoop() {
       }, 1000);
 
       // Show angle values
-      canvasCtx.fillStyle = '#fff';
+      canvasCtx.fillStyle = '#000000ff';
       canvasCtx.fontSize = Math.max(24, canvasElement.height* 0.05);   // Calculate font size relative to bar height or canvas height
       canvasCtx.font = `${canvasCtx.fontSize}px Arial`;
       angles.forEach((a, i) => {

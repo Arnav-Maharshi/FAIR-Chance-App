@@ -303,13 +303,19 @@ async function renderLoop() {
       canvasCtx.fillStyle = '#fff';
       canvasCtx.fontSize = Math.max(24, canvasElement.height* 0.05);   // Calculate font size relative to bar height or canvas height
       canvasCtx.font = `${canvasCtx.fontSize}px Arial`;
-
-      /*distances.forEach((a, i) => {
-        canvasCtx.fillText(`${a.name}: ${a.value}mm`, canvasElement.width * 0.03, 80 + i * canvasElement.height * 0.1);
-      });*/
+      
+      canvasCtx.fillStyle = '#000000ff';
+      angles.forEach((a, i) => {
+        canvasCtx.fillText(`${a.name}: ${a.change_value}deg`, canvasElement.width * 0.03, 80 + i * canvasElement.height * 0.1);
+      });
     } else {
       feedbackDiv.textContent = 'Show your hand to the camera!';
       feedbackDiv.style.color = '#ffd700';
+
+      /*// if no h
+      for (count = 0; count <= 5; count++){
+        angleHistory.push([5,5,5])
+      }*/
     }
     canvasCtx.restore();
   }
@@ -372,4 +378,10 @@ async function main() {
   renderLoop();
 }
 
-main(); 
+window.addEventListener("load", () => {
+  console.log("Window loaded, initializing...");
+  main();
+});
+//main();
+
+window.Capacitor = window.Capacitor || {};

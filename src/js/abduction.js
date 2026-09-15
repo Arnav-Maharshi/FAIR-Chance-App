@@ -273,9 +273,9 @@ async function renderLoop() {
         acc_score_list.push({name: d.name, value: acc_score}); // Storing the accuracy score
       });*/
 
-      acc_score_list.forEach((score) => {
+      /*acc_score_list.forEach((score) => {
         console.log(`${score.name} Acc Score: `, score.value); // Logging the accuracy score
-      });
+      });*/
 
       angleHistory.push(angles.map(a => a.change_value));
       timestampHistory.push(performance.now()); // Storing the timestamp for each angle record
@@ -313,6 +313,11 @@ async function renderLoop() {
       /*distances.forEach((a, i) => {
         canvasCtx.fillText(`${a.name}: ${a.value}mm`, canvasElement.width * 0.03, 80 + i * canvasElement.height * 0.1);
       });*/
+      canvasCtx.fillStyle = '#000000ff';
+      angles.forEach((a, i) => {
+        canvasCtx.fillText(`${a.name}: ${a.change_value}deg`, canvasElement.width * 0.03, 80 + i * canvasElement.height * 0.1);
+      });
+      
     } else {
       feedbackDiv.textContent = 'Show your hand to the camera!';
       feedbackDiv.style.color = '#ffd700';

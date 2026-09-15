@@ -188,10 +188,11 @@ async function renderChart(datapoints) {
                     label: function(context) {
                         // You can access data related to the hovered element here
                         const label = context.dataset.label;
+                        const valid_degree_labels = ['MP', 'PIP', 'DIP', 'Index-Middle', 'Ring-Middle', 'Little-Middle', 'Thumb-Middle']
                         if (label === 'Accuracy Score') {
                             return label + ': ' + context.parsed.y + '%'; // Customize your label here
                         }
-                        else if (label === 'MP' || label === 'PIP' || label === 'DIP') {
+                        else if (valid_degree_labels.includes(label)) {
                             return label + ': ' + context.parsed.y + '°'; // Customize your label here
                         }
                     }

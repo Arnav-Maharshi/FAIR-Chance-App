@@ -271,6 +271,7 @@ async function renderLoop() {
         littleF: "Little-Finger & Thumb"
       };
 
+      canvasCtx.fillStyle = '#000000ff';
       // More efficient code to display the distances to user
       if (selectedMode === "allF") {
         // Display all available distances
